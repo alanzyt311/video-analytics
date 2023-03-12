@@ -25,7 +25,11 @@ and run
 
 to download the object detection model (FasterRCNN-ResNet101).
 
-## 3. Run our code
+## 3. Get data
+
+Go to CS538 google drive, download files from dataset folder. Put frozen_inference_graph.pb into ./workspace, trafficcam_1.mp4 into ./dataset and trafficcam_1_gt into ./workspace/results.
+
+## 4. Run our code
 
 Under ```DDSrepo/workspace```, run
 
