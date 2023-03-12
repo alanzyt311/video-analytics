@@ -1,0 +1,4 @@
+workspace/logs/*
+workspace/results/*
+workspace/frozen_inference_graph.pb
+dataset/*
