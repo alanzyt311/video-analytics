@@ -141,8 +141,8 @@ def get_motion(fname,start_time,duration):
     if not os.path.exists(mvs_dir):
         os.makedirs(mvs_dir)
 
-    # print(encoded_vid_path)
-    # print(out_vid_path)
+    print(encoded_vid_path)
+    print(out_vid_path)
 
     # extract frames according to FPS_GT=30
     decoding_result = subprocess.run(["ffmpeg", "-y",
@@ -262,9 +262,9 @@ def get_motion(fname,start_time,duration):
 
 if __name__ == "__main__":
     # fname = "./test.mp4"
-    # get_mvs(fname)
+    # get_mvs(fname, "./out.csv")
 
-    res_fname = 'test'
+    res_fname = 'trafficcam_1'
     get_motion(res_fname, 0, 2)
 
 

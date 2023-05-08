@@ -30,6 +30,11 @@ FPS_LEVEL = [30, 25, 20, 15, 10, 5, 2, 1]
 QP_LEVEL = [20, 24, 28, 32, 36, 40, 44, 48]
 
 
+def performance_acc(last_accuracy, accuracy, last_latency, latency, 
+        last_bandwidth, bandwidth):
+    metric = 0
+    return metric
+
 
 def calc_rewards_linear(last_accuracy, accuracy, last_latency, latency, 
         last_bandwidth, bandwidth, acc_method=0, bw_method=1, is_log=1, last_process_time=0, process_time=0):

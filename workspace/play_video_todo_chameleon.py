@@ -13,19 +13,19 @@ from dds_utils import (Results, ServerConfig, read_results_dict,
                        evaluate, write_stats, modify_results,
                        get_fid_by_fname, get_fid_by_results,
                        get_duration)
-from controller import a3c
+# from controller import a3c
 # from controller.a3c import (ActorNetwork, CriticNetwork)
 from controller.rewards import (calc_rewards_linear)
 import time
 from munch import *
 import yaml
 import multiprocessing as mp
-import tensorflow.compat.v1 as tf
+# import tensorflow.compat.v1 as tf
 import numpy as np
 from utils.utils import (normalize, normalize_without_motion, normalize_sk)
 from motion import motion
 # dirty fix
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 #===============================================================
 """ 
 
@@ -233,127 +233,127 @@ def main(args):
         os.makedirs(SUMMARY_DIR)
 
     ################### AGENT INIT ###################
-    with tf.Session() as sess:
-        #init_log_file(fname)
+    # with tf.Session() as sess:
+    #init_log_file(fname)
 
-        # Init network
-        sess.run(tf.global_variables_initializer())
+    # Init network
+    # sess.run(tf.global_variables_initializer())å
 
-        topk = top_k()
-        epoch = 0
-        timestamp = 0
+    topk = top_k()
+    epoch = 0
+    timestamp = 0
 
-        fname = os.path.join("./logs",f"{client.config.raw_video_name}_chameleon_window.csv")
-        init_log_file(fname)
+    fname = os.path.join("./logs",f"{client.config.raw_video_name}_chameleon_window.csv")
+    init_log_file(fname)
 
-        rounds = 0
-        last_latency = 0
-        last_accuracy = 0
-        last_bandwidth = 0
-        video_loops = 0
-        make_topk = 1
-        cum_reward = 0
-        level = 0
-        flag = 1
-        window = 4
-        while (True ):
-            #make top_k
-            if(make_topk):
-                print("*****************start to make top-k*****************")
-                for i in range(8):
-                    res = i
-                    client.update(RES_LEVEL[res], FPS_LEVEL[0], QP_LEVEL[0])
-                    accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
-                    if(latency > 10): latency -= 10
-                    if(accuracy >= 0.8):
-                        topk.res_list.append(res)
-                        topk.res_cost.append(bandwidth + latency*20)
-                    else: break
-                    client.last_end_time = 0
-
-                for i in range(8):
-                    fps = i
-                    client.update(RES_LEVEL[0], FPS_LEVEL[fps], QP_LEVEL[0])
-                    accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
-                    if(latency > 10): latency -= 10
-                    if(accuracy >= 0.8):
-                        topk.fps_list.append(fps)
-                        topk.fps_cost.append(bandwidth + latency*20)
-                    else: break
-                    client.last_end_time = 0
-
-                for i in range(8):
-                    qp = i
-                    client.update(RES_LEVEL[0], FPS_LEVEL[0], QP_LEVEL[qp])
-                    accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
-                    if(latency > 10): latency -= 10
-                    if(accuracy >= 0.8):
-                        topk.qp_list.append(qp)
-                        topk.qp_cost.append(bandwidth + latency*20)
-                    else: break
-                    client.last_end_time = 0
-
-                make_topk = 0
-                cfg_list = topk.sort()
-                print("*****************make top-k finish*****************")
-                for i in range(len(cfg_list)):
-                    print(f"res = {RES_LEVEL[cfg_list[i].res]}, fps = {FPS_LEVEL[cfg_list[i].fps]}, qp = {QP_LEVEL[cfg_list[i].qp]}")
-                    print(f"cost = {cfg_list[i].cost}")
-                    if(i > 10): break
-
-
-            res = cfg_list[level].res
-            fps = cfg_list[level].fps
-            qp = cfg_list[level].qp
-
-            res = RES_LEVEL[res]
-            fps = FPS_LEVEL[fps]
-            qp = QP_LEVEL[qp]
-
-            # store for logging
-            last_res = res
-            last_fps = fps
-            last_qp = qp
-
-
-            client.update(res, fps, qp)
-            logger.info(f"NEW ACTION: [{client.config.low_resolution}]RES [{client.config.fps}]FPS [{client.config.low_qp}]QP")
-            accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
-
-            if(window == 4):
-                window = 0
-                if(accuracy < 0.7):
-                    up = int((0.7-accuracy) * 10)
-                    if(level + up < len(cfg_list)):
-                        level += up
-                        print(f"level + {up}")
-                    else:
-                        level = len(cfg_list) - 1
-                else:
-                    if(level != 0 ):
-                        level -=1
-                        print("level - 1")
-            else:
-                window += 1
-            # When terminate, start from the beginning and continue to train
-            if (terminate):
-                video_loops += 1
-                logger.info(f"Reset video {video_loops} times!")
+    rounds = 0
+    last_latency = 0
+    last_accuracy = 0
+    last_bandwidth = 0
+    video_loops = 0
+    make_topk = 1
+    cum_reward = 0
+    level = 0
+    flag = 1
+    window = 4
+    while (True):
+        #make top_k
+        if(make_topk):
+            print("*****************start to make top-k*****************")
+            for i in range(8):
+                res = i
+                client.update(RES_LEVEL[res], FPS_LEVEL[0], QP_LEVEL[0])
+                accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
+                if(latency > 10): latency -= 10
+                if(accuracy >= 0.8):
+                    topk.res_list.append(res)
+                    topk.res_cost.append(bandwidth + latency*20)
+                else: break
                 client.last_end_time = 0
-                client.terminate = False
 
-            rounds += 1
+            for i in range(8):
+                fps = i
+                client.update(RES_LEVEL[0], FPS_LEVEL[fps], QP_LEVEL[0])
+                accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
+                if(latency > 10): latency -= 10
+                if(accuracy >= 0.8):
+                    topk.fps_list.append(fps)
+                    topk.fps_cost.append(bandwidth + latency*20)
+                else: break
+                client.last_end_time = 0
 
-            timestamp += latency
+            for i in range(8):
+                qp = i
+                client.update(RES_LEVEL[0], FPS_LEVEL[0], QP_LEVEL[qp])
+                accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
+                if(latency > 10): latency -= 10
+                if(accuracy >= 0.8):
+                    topk.qp_list.append(qp)
+                    topk.qp_cost.append(bandwidth + latency*20)
+                else: break
+                client.last_end_time = 0
 
-            # Step3: Calculate rewards
-            reward = calc_rewards_linear(last_accuracy, accuracy, last_latency, latency,
-                                         last_bandwidth, bandwidth)
+            make_topk = 0
+            cfg_list = topk.sort()
+            print("*****************make top-k finish*****************")
+            for i in range(len(cfg_list)):
+                print(f"res = {RES_LEVEL[cfg_list[i].res]}, fps = {FPS_LEVEL[cfg_list[i].fps]}, qp = {QP_LEVEL[cfg_list[i].qp]}")
+                print(f"cost = {cfg_list[i].cost}")
+                if(i > 10): break
 
-            cum_reward += reward
 
-            write_log_without_motion(fname,rounds,last_res,last_fps,last_qp,accuracy,
-                                         bandwidth,latency,num_objs,reward,cum_reward)
+        res = cfg_list[level].res
+        fps = cfg_list[level].fps
+        qp = cfg_list[level].qp
+
+        res = RES_LEVEL[res]
+        fps = FPS_LEVEL[fps]
+        qp = QP_LEVEL[qp]
+
+        # store for logging
+        last_res = res
+        last_fps = fps
+        last_qp = qp
+
+
+        client.update(res, fps, qp)
+        logger.info(f"NEW ACTION: [{client.config.low_resolution}]RES [{client.config.fps}]FPS [{client.config.low_qp}]QP")
+        accuracy, bandwidth, latency, num_objs, motion, terminate = client.analyze_video()
+
+        if(window == 4):
+            window = 0
+            if(accuracy < 0.7):
+                up = int((0.7-accuracy) * 10)
+                if(level + up < len(cfg_list)):
+                    level += up
+                    print(f"level + {up}")
+                else:
+                    level = len(cfg_list) - 1
+            else:
+                if(level != 0 ):
+                    level -=1
+                    print("level - 1")
+        else:
+            window += 1
+        # When terminate, start from the beginning and continue to train
+        if (terminate):
+            video_loops += 1
+            logger.info(f"Reset video {video_loops} times!")
+            client.last_end_time = 0
+            client.terminate = False
+
+        rounds += 1
+
+        timestamp += latency
+
+        # Step3: Calculate rewards
+        reward = calc_rewards_linear(last_accuracy, accuracy, last_latency, latency,
+                                        last_bandwidth, bandwidth)
+
+        cum_reward += reward
+
+        write_log_without_motion(fname,rounds,last_res,last_fps,last_qp,accuracy,
+                                        bandwidth,latency,num_objs,reward,cum_reward)
 
 
 

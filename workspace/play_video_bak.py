@@ -74,7 +74,7 @@ FPS_LEVEL = [i for i in range(1, 31)]
 QP_LEVEL = [i for i in range(20, 50)]
 
 
-DEFAULT_RES = int(len(RES_LEVEL)/2)-1
+DEFAULT_RES = int(len(RES_LEVEL)/2)
 DEFAULT_FPS = int(len(FPS_LEVEL)/2)
 DEFAULT_QP = int(len(QP_LEVEL)/2)
 
@@ -156,13 +156,13 @@ def init_log_file(fname):
     # if not os.path.exists(fname):
     results_files = open(fname, "a",  newline='')
     csv_writer = csv.writer(results_files)
-    header = ("timestamp,resolution,fps,qp,accuracy,available_bw,predict_bw,est_bw_config,video_size,latency,objnum").split(",")
+    header = ("timestamp,resolution,fps,qp,accuracy,bandwidth,latency,objnum,reward,cumreward").split(",")
     csv_writer.writerow(header)
     results_files.close()
 
-# fname,rounds,res,fps,qp,accuracy,available_bw,est_bw_config,video_size,latency,num_objs
-def write_log(fname,timestamp,resolution,fps,qp,accuracy,available_bw,predict_bw,est_bw_config,video_size,latency,objnums):
-    stats = (f"{timestamp},{resolution},{fps},{qp},{accuracy},{available_bw},{predict_bw},{est_bw_config},{video_size},{latency},{objnums}").split(",")
+
+def write_log(fname,timestamp,resolution,fps,qp,accuracy,bandwidth,latency,objnums,reward,cumreward):
+    stats = (f"{timestamp},{resolution},{fps},{qp},{accuracy},{bandwidth},{latency},{objnums},{reward},{cumreward}").split(",")
 
     results_files = open(fname, "a", newline='')
     csv_writer = csv.writer(results_files)
@@ -171,16 +171,8 @@ def write_log(fname,timestamp,resolution,fps,qp,accuracy,available_bw,predict_bw
 
 
 
-def scale_data(data):
-    min_value = min(data)
-    max_value = max(data)
-    new_min = 0
-    new_max = 15
-    scaled_data = []
-    for value in data:
-        scaled_value = (value - min_value) / (max_value - min_value) * (new_max - new_min) + new_min
-        scaled_data.append(scaled_value)
-    return scaled_data
+
+
 
 
 def main(args):
@@ -236,101 +228,71 @@ def main(args):
     rounds = 0
     timestamp = 0
     video_loops = 0
-    # last_latency = 0
-    # last_accuracy = 0
-    # last_bandwidth = 0
+    last_latency = 0
+    last_accuracy = 0
+    last_bandwidth = 0
 
-    # last_res = DEFAULT_RES
-    # last_fps = DEFAULT_FPS
-    # last_qp = DEFAULT_QP
-    # res_lv = DEFAULT_RES
-    # fps_lv = DEFAULT_FPS
-    # qp_lv = DEFAULT_QP
-    
-    res_lv = RES_LEVEL.index(0.6)
-    fps_lv = FPS_LEVEL.index(5)
-    qp_lv = QP_LEVEL.index(40)
+    last_res = DEFAULT_RES
+    last_fps = DEFAULT_FPS
+    last_qp = DEFAULT_QP
+    res = DEFAULT_RES
+    fps = DEFAULT_FPS
+    qp = DEFAULT_QP
 
-    # r_record = []
-
-    est_bw_config = 0
-    bw_fname = "../controller/1_smooth.log"
-    
-    with open(bw_fname, 'r') as file:
-        actual_raw_bw_list = []
-        predict_raw_bw_list = []
-        for line in file:
-            actual, predict = line.strip().split(',')
-            actual_raw_bw_list.append(float(actual))
-            predict_raw_bw_list.append(float(predict))
-
-        # left, right = 230, 350
-        left, right = 350, 400
-        actual_bw_list = scale_data(actual_raw_bw_list[left:right])
-        predict_bw_list = scale_data(predict_raw_bw_list[left:right])
-
-        
-
-        # If not terminate, keep streaming
-        terminate = False
-        while (not terminate):
-
-            # Step1: Update config with last round action
-            res = RES_LEVEL[res_lv]
-            fps = FPS_LEVEL[fps_lv]
-            qp = QP_LEVEL[qp_lv]
-
-            # # store for logging
-            # last_res = res
-            # last_fps = fps
-            # last_qp = qp
-
-            client.update(res, fps, qp)
-            logger.info(f"NEW ACTION: [{client.config.low_resolution}]RES [{client.config.fps}]FPS [{client.config.low_qp}]QP")
+    r_record = []
 
 
-            # Step2: video analytics
-            accuracy, video_size, latency, num_objs, terminate = client.analyze_video()
-            # accuracy, video_size, latency, num_objs, terminate = 1.0, 2, 2, 2, False
+    # If not terminate, keep streaming
+    terminate = False
+    while (not terminate):
+
+        # Step1: Update config with last round action
+        res = RES_LEVEL[res]
+        fps = FPS_LEVEL[fps]
+        qp = QP_LEVEL[qp]
+
+        # store for logging
+        last_res = res
+        last_fps = fps
+        last_qp = qp
+
+        client.update(res, fps, qp)
+        logger.info(f"NEW ACTION: [{client.config.low_resolution}]RES [{client.config.fps}]FPS [{client.config.low_qp}]QP")
 
 
-            # When terminate, start from the beginning and continue to train
-            if (terminate):
-                video_loops += 1
-                logger.info(f"Reset video {video_loops} times!")
-                client.last_end_time = 0
-                client.terminate = False
-                terminate = False
+        # Step2: video analytics
+        accuracy, bandwidth, latency, num_objs, terminate = client.analyze_video()
 
-            rounds += 1
-            timestamp += latency
+        # When terminate, start from the beginning and continue to train
+        if (terminate):
+            video_loops += 1
+            logger.info(f"Reset video {video_loops} times!")
+            client.last_end_time = 0
+            client.terminate = False
+            terminate = False
 
-            actual_bw = actual_bw_list[rounds]
-            predict_bw_cur = predict_bw_list[rounds]
-            write_log(fname,rounds,res,fps,qp,accuracy,actual_bw,predict_bw_cur,est_bw_config,video_size,latency,num_objs)
+        rounds += 1
+        timestamp += latency
 
-            # # Step3: Calculate rewards
-            # reward = calc_rewards_linear(last_accuracy, accuracy, last_latency, latency,
-            #                             last_bandwidth, bandwidth)
-            # r_record.append(reward)
-            # cum_reward = np.sum(r_record) - r_record[0]
+        # Step3: Calculate rewards
+        reward = calc_rewards_linear(last_accuracy, accuracy, last_latency, latency,
+                                    last_bandwidth, bandwidth)
+        r_record.append(reward)
+        cum_reward = np.sum(r_record) - r_record[0]
 
-            # # update memory
-            # last_accuracy = accuracy
-            # last_bandwidth = bandwidth
-            # last_latency = latency
-
-
-            # Step4: Controller generate new configs, config is the idx in list not value
-            predict_bw_next = predict_bw_list[rounds+1]
-            res_lv, fps_lv, qp_lv, next_est_bw_config = gen_new_config(predict_bw_next)
-
-            # print(res, fps, qp)
-            est_bw_config = next_est_bw_config
+        # update memory
+        last_accuracy = accuracy
+        last_bandwidth = bandwidth
+        last_latency = latency   
 
 
-            # write_log(fname,rounds,last_res,last_fps,last_qp,accuracy,
-            #         bandwidth,latency,num_objs,reward,cum_reward)
+        # Step4: Controller generate new configs, config is the idx in list not value
+        res, fps, qp = gen_new_config(last_res, last_fps, last_qp)
+        # print(res, fps, qp)
+
+
+        write_log(fname,rounds,last_res,last_fps,last_qp,accuracy,
+                bandwidth,latency,num_objs,reward,cum_reward)
 
 
 
