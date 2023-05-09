@@ -266,6 +266,8 @@ def main(args):
 
         # left, right = 230, 350
         left, right = 350, 400
+        # left, right = 50, 100
+
         actual_bw_list = scale_data(actual_raw_bw_list[left:right])
         predict_bw_list = scale_data(predict_raw_bw_list[left:right])
 

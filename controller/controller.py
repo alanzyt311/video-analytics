@@ -89,12 +89,15 @@ def gen_new_config(est_bw):
 
     # tunable
     thresh = 0.02
+    # thresh = 0.0075
 
 
     # differencing
     #              0      1       2      3       4      5      6      7
     feat_set = ['pixel','area','edge','corner','hist','hog','sift','surf']
     feat_type = feat_set[1]
+    # feat_type = feat_set[2]
+
     differencer = Differencer.str2class(feat_type)()
 
     feats = [differencer.get_frame_feature(get_frame_image(file_path,i))

@@ -300,39 +300,39 @@ def select_frames_with_thresh(diff_value, thresh):
 
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     # file_path = "/home/ubuntu/Desktop/yoda/test/"
-#     file_path = "/Users/alanzyt/Desktop/video-analytics/dataset/trafficcam_1_fps30_tmp/src/"
+    # file_path = "/home/ubuntu/Desktop/yoda/test/"
+    file_path = "/Users/alanzyt/Desktop/video-analytics/dataset/trafficcam_1_gt_tmp/src/"
 
-#     start_fid = 0
-#     end_fid = 29
-#     frame_range = [start_fid,end_fid]
+    start_fid = 0
+    end_fid = 29
+    frame_range = [start_fid,end_fid]
 
-#     # tunable
-#     thresh = 0.02
+    # tunable
+    thresh = 0.005
 
 
-#     # differencing
-#     #              0      1       2      3       4      5      6      7
-#     feat_set = ['pixel','area','edge','corner','hist','hog','sift','surf']
-#     feat_type = feat_set[1]
-#     differencer = Differencer.str2class(feat_type)()
+    # differencing
+    #              0      1       2      3       4      5      6      7
+    feat_set = ['pixel','area','edge','corner','hist','hog','sift','surf']
+    feat_type = feat_set[2]
+    differencer = Differencer.str2class(feat_type)()
 
-#     feats = [differencer.get_frame_feature(get_frame_image(file_path,i))
-#                 for i in range(frame_range[0], frame_range[1]+1)]
-#     # print(len(feats))
+    feats = [differencer.get_frame_feature(get_frame_image(file_path,i))
+                for i in range(frame_range[0], frame_range[1]+1)]
+    # print(len(feats))
 
-#     # diff is the fraction changed over pre-determined threshold
-#     diff_vec = [differencer.cal_frame_diff(ft1, ft0)
-#                 for ft0, ft1 in zip(feats[:-1], feats[1:])]
-#     print(diff_vec)
+    # diff is the fraction changed over pre-determined threshold
+    diff_vec = [differencer.cal_frame_diff(ft1, ft0)
+                for ft0, ft1 in zip(feats[:-1], feats[1:])]
+    print(diff_vec)
 
-#     select_frames = select_frames_with_thresh(diff_vec,thresh)
+    select_frames = select_frames_with_thresh(diff_vec,thresh)
 
-#     print(select_frames)
+    print(select_frames)
 
-#     print(f"Final fps: {len(select_frames)}")
+    print(f"Final fps: {len(select_frames)}")
 
 
 
